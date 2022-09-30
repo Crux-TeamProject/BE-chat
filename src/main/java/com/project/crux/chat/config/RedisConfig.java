@@ -1,5 +1,6 @@
 package com.project.crux.chat.config;
 
+import com.project.crux.chat.model.ChatMessage;
 import com.project.crux.chat.pubsub.RedisSubscriber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,5 +68,14 @@ public class RedisConfig {
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(String.class));
         return redisTemplate;
+    }
+
+    @Bean
+    public RedisTemplate<String, ChatMessage> redisChatMessageTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, ChatMessage> redisChatMessageTemplate = new RedisTemplate<>();
+        redisChatMessageTemplate.setConnectionFactory(connectionFactory);
+        redisChatMessageTemplate.setKeySerializer(new StringRedisSerializer());
+        redisChatMessageTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatMessage.class));
+        return redisChatMessageTemplate;
     }
 }

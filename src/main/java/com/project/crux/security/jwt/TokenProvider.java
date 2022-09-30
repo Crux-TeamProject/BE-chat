@@ -39,6 +39,7 @@ public class TokenProvider {
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
 
         return Jwts.builder()
+                .claim("imgUrl", member.getImgUrl())
                 .setId(member.getNickname())
                 .setSubject(member.getEmail())
                 .setExpiration(accessTokenExpiresIn)
@@ -67,7 +68,7 @@ public class TokenProvider {
     /**
      * Jwt Token을 복호화 하여 이름을 얻는다.
      */
-    public String getNicknameFrom(String token) {
+    public String getNickname(String token) {
         Jws<Claims> claimsJws;
         try {
             claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -75,6 +76,16 @@ public class TokenProvider {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
         return claimsJws.getBody().getId();
+    }
+
+    public String getImgUrl(String token) {
+        Jws<Claims> claimsJws;
+        try {
+            claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+        return claimsJws.getBody().get("imgUrl", String.class);
     }
 
     public String extractToken(String bearerToken) {

@@ -13,9 +13,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import java.security.Principal;
-import java.util.Optional;
-
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -38,15 +35,17 @@ public class StompHandler implements ChannelInterceptor {
         } else if (StompCommand.SUBSCRIBE == accessor.getCommand()) {
             String roomId = chatService.getRoomId(message.getHeaders().get(SIMP_DESTINATION, String.class));
             String sessionId = message.getHeaders().get(SIMP_SESSION_ID, String.class);
-            String nickname = Optional.ofNullable((Principal) message.getHeaders().get(SIMP_USER))
-                    .map(Principal::getName).orElse("UnknownUser");
+            String token = validateToken(accessor);
+            String nickname = jwtTokenProvider.getNickname(token);
+
             redisChatRoomRepository.enterChatRoom(roomId, sessionId, nickname);
             chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.ENTER).roomId(roomId).sender(nickname).build());
             log.info("SUBSCRIBED {}, {}", nickname, roomId);
         } else if (StompCommand.DISCONNECT == accessor.getCommand()) {
             String sessionId = message.getHeaders().get(SIMP_SESSION_ID, String.class);
             String roomId = redisChatRoomRepository.getUserEnterRoomId(sessionId);
-            String nickname = Optional.ofNullable((Principal) message.getHeaders().get(SIMP_USER)).map(Principal::getName).orElse("UnknownUser");
+            String token = validateToken(accessor);
+            String nickname = jwtTokenProvider.getNickname(token);
             chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.QUIT).roomId(roomId).sender(nickname).build());
             redisChatRoomRepository.removeUserEnterInfo(sessionId, roomId);
             log.info("DISCONNECTED {}, {}", nickname, roomId);
@@ -54,9 +53,10 @@ public class StompHandler implements ChannelInterceptor {
         return message;
     }
 
-    private void validateToken(StompHeaderAccessor accessor) {
+    private String validateToken(StompHeaderAccessor accessor) {
         String bearerToken = accessor.getFirstNativeHeader(AUTHORIZATION_HEADER);
         String token = jwtTokenProvider.extractToken(bearerToken);
         jwtTokenProvider.validateToken(token);
+        return token;
     }
 }

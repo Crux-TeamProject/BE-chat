@@ -37,6 +37,8 @@ public class ChatService {
      */
     public void sendChatMessage(ChatMessage chatMessage) {
         LocalDateTime createdAt = LocalDateTime.now();
+        chatMessage.setCreatedAt(createdAt);
+        chatMessage.updateUserList(redisChatRoomRepository.getUsers(chatMessage.getRoomId()));
         if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
             chatMessage.setMessage(chatMessage.getSender() + "님이 방에 입장했습니다.");
             chatMessage.setSender("[알림]");
@@ -44,7 +46,6 @@ public class ChatService {
             chatMessage.setMessage(chatMessage.getSender() + "님이 방에서 나갔습니다.");
             chatMessage.setSender("[알림]");
         } else {
-            chatMessage.setCreatedAt(createdAt);
             redisChatRoomRepository.save(chatMessage);
         }
         redisTemplate.convertAndSend(channelTopic.getTopic(), chatMessage);

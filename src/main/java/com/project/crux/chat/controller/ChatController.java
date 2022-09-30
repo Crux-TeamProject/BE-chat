@@ -29,11 +29,11 @@ public class ChatController {
     @MessageMapping("/chat/message")
     public void message(ChatMessage message, @Header(AUTHORIZATION_HEADER) String bearerToken) {
         String token = jwtTokenProvider.extractToken(bearerToken);
-        String nickname = jwtTokenProvider.getNicknameFrom(token);
-        // 로그인 회원 정보로 대화명 설정
+        String nickname = jwtTokenProvider.getNickname(token);
+        String imgUrl = jwtTokenProvider.getImgUrl(token);
         message.setSender(nickname);
+        message.setImgUrl(imgUrl);
         message.setType(ChatMessage.MessageType.TALK);
-        // Websocket에 발행된 메시지를 redis로 발행(publish)
         chatService.sendChatMessage(message);
     }
 

@@ -21,6 +21,7 @@ public class ChatMessage implements Serializable {
     private MessageType type;
     private String roomId;
     private String sender;
+    private String imgUrl;
     private String message;
     private List<String> userList;
     @JsonSerialize(using = LocalDateTimeSerializer.class)

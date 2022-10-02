@@ -1,6 +1,5 @@
 package com.project.crux.chat.config.handler;
 
-import com.project.crux.chat.model.ChatMessage;
 import com.project.crux.chat.repo.RedisChatRoomRepository;
 import com.project.crux.chat.service.ChatService;
 import com.project.crux.security.jwt.TokenProvider;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Component;
 public class StompHandler implements ChannelInterceptor {
     private static final String SIMP_DESTINATION = "simpDestination";
     private static final String SIMP_SESSION_ID = "simpSessionId";
-    private static final String SIMP_USER = "simpUser";
     private static final String AUTHORIZATION_HEADER = "Authorization";
 
     private final TokenProvider jwtTokenProvider;
@@ -39,14 +37,12 @@ public class StompHandler implements ChannelInterceptor {
             String nickname = jwtTokenProvider.getNickname(token);
 
             redisChatRoomRepository.enterChatRoom(roomId, sessionId, nickname);
-            chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.ENTER).roomId(roomId).sender(nickname).build());
             log.info("SUBSCRIBED {}, {}", nickname, roomId);
         } else if (StompCommand.DISCONNECT == accessor.getCommand()) {
             String sessionId = message.getHeaders().get(SIMP_SESSION_ID, String.class);
             String roomId = redisChatRoomRepository.getUserEnterRoomId(sessionId);
             String token = validateToken(accessor);
             String nickname = jwtTokenProvider.getNickname(token);
-            chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.QUIT).roomId(roomId).sender(nickname).build());
             redisChatRoomRepository.removeUserEnterInfo(sessionId, roomId);
             log.info("DISCONNECTED {}, {}", nickname, roomId);
         }

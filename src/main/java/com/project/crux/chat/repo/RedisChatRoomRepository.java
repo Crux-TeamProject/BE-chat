@@ -64,7 +64,7 @@ public class RedisChatRoomRepository {
 
     //채팅 리스트 가져오기
     public List<ChatMessage> findAllMessage(String roomId) {
-        return opsListChatMessage.range(CHAT_MESSAGE + roomId, 0, 30);
+        return opsListChatMessage.range(CHAT_MESSAGE + roomId, -30, -1);
     }
 
     public ChatMessage findOneMessage(Long roomId) {

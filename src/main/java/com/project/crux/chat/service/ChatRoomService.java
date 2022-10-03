@@ -5,6 +5,7 @@ import com.project.crux.chat.model.ChatRoom;
 import com.project.crux.chat.model.response.ChatRoomResponseDto;
 import com.project.crux.chat.repo.ChatRoomRepository;
 import com.project.crux.chat.repo.RedisChatRoomRepository;
+import com.project.crux.crew.Status;
 import com.project.crux.crew.repository.CrewMemberRepository;
 import com.project.crux.security.jwt.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class ChatRoomService {
 
     public List<ChatRoomResponseDto> findAllRoom(UserDetailsImpl userDetails) {
         return crewMemberRepository.findAllByMember(userDetails.getMember()).stream()
+                .filter(cm -> !cm.getStatus().equals(Status.SUBMIT))
                 .map(cm -> {
                     ChatRoom room = chatRoomRepository.findByCrew(cm.getCrew());
                     ChatMessage message = redisChatRoomRepository.findOneMessage(room.getId());
